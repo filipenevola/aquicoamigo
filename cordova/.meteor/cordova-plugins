@@ -1,3 +1,6 @@
+cordova-plugin-appsettings@https://github.com/pathable/cordova-plugin-appsettings.git#6ffc8fa844468495d09c2e46f68aad06017cd744
+cordova-plugin-appversion@1.0.0
 fairmanager-cordova-plugin-universal-links@https://github.com/pathable/plugin-universal-links.git#e0177fa5f7084a679c061aa25bc2949ea6d5f95a
 cordova-plugin-statusbar@2.4.3
 onesignal-cordova-plugin@2.8.0
+phonegap-plugin-multidex@1.0.0

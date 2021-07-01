@@ -18,36 +18,31 @@ let schemeUniversalLink = 'https';
 
 // noinspection ThisExpressionReferencesGlobalObjectJS
 switch (this.process.env.MOBILE_APP_ID) {
-  case 'com.meteorapp.mobile':
+  case 'com.aquicoamigo':
     // eslint-disable-next-line no-console
     console.log('--> mobile-config - production build');
     idName = {
-      id: 'com.meteorapp.mobile',
-      name: 'MeteorApp',
+      id: 'com.aquicoamigo',
+      name: 'Aquico Amigo',
     };
-    oneSignalAppId = 'a4a5axxx-59f2-493f-abdb-efce7b0c8ef6';
-    urlUniversalLink = 'mobile.meteorapp.com';
-    break;
-  case 'com.meteorapp.stagingmobile':
-    // eslint-disable-next-line no-console
-    console.log('--> mobile-config - staging build');
-    idName = {
-      id: 'com.meteorapp.stagingmobile',
-      name: 'mobileS',
-    };
-    oneSignalAppId = '7b357xxx-6509-48e4-b0e1-60f8f5f116a2';
-    urlUniversalLink = 'stagingmobile.meteorapp.com';
+    oneSignalAppId = 'b12cca54-ab8d-407d-b6e0-5be352ba101d';
+    urlUniversalLink = 'www.aquicoamigo.com';
     break;
   default:
     // eslint-disable-next-line no-console
     console.log('--> mobile-config - development build');
     idName = {
       id: 'localhost.mobile',
-      name: 'mobileD',
+      name: 'Aquico Amigo D',
     };
     urlUniversalLink = 'localhost:5000';
     schemeUniversalLink = 'http';
 }
+
+const safeIdName = {
+  ...idName,
+  name: idName.name.replace(/[^A-Za-z0-9]/g, ''),
+};
 
 // eslint-disable-next-line no-undef
 App.info(
@@ -56,18 +51,21 @@ App.info(
       version,
       buildNumber,
       description: '',
-      author: 'Meteor',
-      email: 'hello@meteorapp.com',
-      website: 'meteor.com',
+      author: 'Filipe Névola',
+      email: 'filipenevola@gmail.com',
+      website: 'aquicoamigo.com',
     },
-    idName
+    safeIdName
   )
 );
 
+// green #10b981
+// blue #6366f1
+
 // eslint-disable-next-line no-undef
-App.setPreference('BackgroundColor', '0xfffdab13');
+App.setPreference('BackgroundColor', '0xff6366f1');
 // eslint-disable-next-line no-undef
-App.setPreference('StatusBarBackgroundColor', '#fdab13');
+App.setPreference('StatusBarBackgroundColor', '#6366f1');
 // eslint-disable-next-line no-undef
 App.setPreference('StatusBarStyle', 'lightcontent');
 
@@ -117,6 +115,7 @@ App.accessRule('https://*.instagram.com', { type: 'navigation' });
 App.accessRule('https://*.facebook.com', { type: 'network' });
 // eslint-disable-next-line no-undef
 App.accessRule('https://*.facebook.com', { type: 'navigation' });
+
 
 // https://pgicons.abiro.com/
 // https://docs.meteor.com/api/mobile-config.html#App-icons
@@ -170,7 +169,7 @@ App.appendToConfig(`
   </platform>
   <platform name="android">
     <preference name="android-targetSdkVersion" value="29" />
-    <preference name="android-minSdkVersion" value="20" />
+    <preference name="android-minSdkVersion" value="22" />
   </platform>
   <universal-links>
     <host name="${urlUniversalLink}" scheme="${schemeUniversalLink}" />
