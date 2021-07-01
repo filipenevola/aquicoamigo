@@ -1,4 +1,5 @@
 import {Meteor} from 'meteor/meteor';
+import {UsersCollection} from "../collections/UsersCollections";
 
 Meteor.methods({
   addPlayerId({playerId}) {
@@ -6,6 +7,6 @@ Meteor.methods({
     if (Meteor.isClient || !this.userId || !playerId) return null;
     console.log(`playerId`, playerId);
 
-    Meteor.users.update(this.userId, {$addToSet: {playersIds: playerId}});
+    UsersCollection.addPlayerId({playerId})
   },
 });

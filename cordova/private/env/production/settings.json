@@ -1,12 +1,12 @@
 {
   "public": {
     "native": {
-      "appleItunesAppId": "2441947344",
-      "appleTeamId": "XR7QCJTCL9",
-      "appleBundleId": "com.meteorapp.mobile",
-      "googlePlayAppId": "com.meteorapp.mobile",
-      "oneSignalAppId": "a4a5axxx-59f2-493f-abdb-efce7b0c8ef6",
-      "oneSignalRestApiKey": "XXXwMDI5MWEtNzE3MC00ZGEzLWIyNzAtNzgzYzg5NmU5ZWVj"
+      "appleItunesAppId": "1574745755",
+      "appleTeamId": "VR7QCJTCL9",
+      "appleBundleId": "com.aquicoamigo",
+      "googlePlayAppId": "com.aquicoamigo",
+      "oneSignalAppId": "b12cca54-ab8d-407d-b6e0-5be352ba101d",
+      "oneSignalRestApiKey": "NjkwOWY2Y2YtYWFjMi00ODFmLWE2OTYtMzViMzhiOGIzODRk"
     }
   }
 }

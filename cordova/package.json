@@ -31,5 +31,8 @@
       "client": "client/main",
       "server": "server/main.js"
     }
+  },
+  "devDependencies": {
+    "@quave/eslint-config-quave": "^1.0.5"
   }
 }

@@ -1,5 +1,4 @@
 import {Meteor} from 'meteor/meteor';
-// TODO mobile add accounts
 import {Accounts} from 'meteor/accounts-base';
 
 import {methodCall} from './methodCall';
@@ -18,7 +17,7 @@ export const addPlayerId = playerId => {
 const goTo = route => {
   const navigateTo = `${!route.startsWith('/') ? '/' : ''}${route}`;
   console.debug(`navigateTo ${navigateTo}`);
-  history.push(navigateTo);
+  window.location = navigateTo;
 };
 
 Meteor.startup(() => {
@@ -49,7 +48,7 @@ Meteor.startup(() => {
             !redirectUrl.startsWith('/') ? '/' : ''
           }${redirectUrl}`;
           console.debug(`navigateTo ${navigateTo}`);
-          history.push(navigateTo);
+          goTo(navigateTo);
         }
       });
 
@@ -57,12 +56,13 @@ Meteor.startup(() => {
       if (appId) {
         window.plugins.OneSignal.setLogLevel({logLevel: 4, visualLevel: 1});
 
-        const notificationOpenedCallback = notification => {
-          console.debug('received notification', JSON.stringify(notification));
+        const notificationOpenedCallback = data => {
+          console.debug('received notification', JSON.stringify(data));
+
           // TODO mobile readme: explain additionalData.route
-          const route = notification && notification.payload &&
-            notification.payload.additionalData &&
-            notification.payload.additionalData.route;
+          const route =
+            data?.notification?.payload?.additionalData?.route;
+
           if (route) {
             goTo(route);
           }

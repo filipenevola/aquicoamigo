@@ -7,6 +7,6 @@ import {Game} from "./Game";
 export const Routes = () => {
   return <Switch>
     <Route exact path="/" component={Home}/>
-    <Route path="/game" component={Game}/>
+    <Route path="/game/:gameId?" component={Game}/>
   </Switch>;
 }
