@@ -3,8 +3,8 @@ import { createCollection } from 'meteor/quave:collections';
 export const UsersCollection = createCollection({
   instance: Meteor.users,
   collection: {
-    addPlayerId({ playerId }) {
-      this.update(this.userId, { $addToSet: { playersIds: playerId } });
+    addPlayerId({ userId, playerId }) {
+      this.update(userId, { $addToSet: { playersIds: playerId } });
     },
   },
 });

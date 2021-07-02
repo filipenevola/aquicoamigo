@@ -23,7 +23,11 @@ export const sendPush = ({ heading, content, playersIds, data = {} }) =>
     };
 
     request.post(options, (error, response, body) => {
-      if (error) reject(error);
+      if (error) {
+        console.error(`Error sending push to ${playersIds}`, error);
+
+        reject(error);
+      }
       resolve({
         response: JSON.parse(body),
       });

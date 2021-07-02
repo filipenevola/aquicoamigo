@@ -8,7 +8,7 @@ buildFolder=meteor-mobile-build-production
 host=https://mobile.meteorapp.com
 androidVersion=29.0.2
 pathToAndroidKeyStore=/Users/filipe/Documents/meteor/ws/mobile/keystore
-androidPassword=asdWEQdsaD
+androidPassword=aaaaaaaaa
 
 # build
 cd ../../../

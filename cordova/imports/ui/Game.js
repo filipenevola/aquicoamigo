@@ -1,4 +1,5 @@
 import React, { Fragment, useState, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { Random } from 'meteor/random';
 import CheckIcon from '@heroicons/react/solid/CheckIcon';
 import MailIcon from '@heroicons/react/solid/MailIcon';
@@ -7,16 +8,23 @@ import UserIconOutline from '@heroicons/react/outline/UserIcon';
 import UserAddIconOutline from '@heroicons/react/outline/UserAddIcon';
 import CheckIconOutline from '@heroicons/react/outline/CheckIcon';
 import CheckCircleIcon from '@heroicons/react/outline/CheckCircleIcon';
+import XCircleIcon from '@heroicons/react/outline/XCircleIcon';
+import CubeIcon from '@heroicons/react/outline/CubeIcon';
 import XIcon from '@heroicons/react/solid/XIcon';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
 import { Accounts } from 'meteor/accounts-base';
 import { methodCall } from '../infra/methodCall';
+import {
+  GamesCollection,
+  SequenceStatus,
+} from '../collections/GamesCollections';
+import { Word } from '../enums/Word';
 
 const Notification = ({ notification }) => {
   const [show, setShow] = useState(true);
 
-  const { title, message } = notification || {};
+  const { title, message, success = true } = notification || {};
   return (
     <>
       {/* Global notification live region, render this permanently at the end of the document */}
@@ -40,10 +48,17 @@ const Notification = ({ notification }) => {
               <div className="p-4">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <CheckCircleIcon
-                      className="h-6 w-6 text-green-400"
-                      aria-hidden="true"
-                    />
+                    {success ? (
+                      <CheckCircleIcon
+                        className="h-6 w-6 text-green-400"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <XCircleIcon
+                        className="h-6 w-6 text-red-400"
+                        aria-hidden="true"
+                      />
+                    )}
                   </div>
                   <div className="ml-3 w-0 flex-1 pt-0.5">
                     <p className="text-sm font-medium text-gray-900">{title}</p>
@@ -72,7 +87,7 @@ const Notification = ({ notification }) => {
   );
 };
 
-const Send = ({ onClose, words, setNotification, onSend }) => {
+const Send = ({ onClose, words, setNotification, onSend, game }) => {
   const user = useTracker(() => Meteor.user());
   const [signUp, setSignUp] = useState(true);
   const [open, setOpen] = useState(true);
@@ -98,7 +113,7 @@ const Send = ({ onClose, words, setNotification, onSend }) => {
       setError('Please fill all the fields above.');
       return;
     }
-    const safeEmail = email.trim().toLowerCase()
+    const safeEmail = email.trim().toLowerCase();
     Accounts.createUser(
       {
         username: safeEmail,
@@ -127,7 +142,7 @@ const Send = ({ onClose, words, setNotification, onSend }) => {
       setError('Please fill your email and password.');
       return;
     }
-    const safeEmail = email.trim().toLowerCase()
+    const safeEmail = email.trim().toLowerCase();
     Meteor.loginWithPassword(safeEmail, password, error => {
       if (!error) {
         console.log(`User authenticated ${email}`);
@@ -155,8 +170,8 @@ const Send = ({ onClose, words, setNotification, onSend }) => {
       return;
     }
 
-    const safeEmail = email.trim().toLowerCase()
-    methodCall('sendSequence', { words, friend: { name, email:safeEmail } })
+    const safeEmail = email.trim().toLowerCase();
+    methodCall('sendSequence', { words, friend: { name, email: safeEmail } })
       .then(() => {
         setNotification({
           title: 'Successfully sent!',
@@ -168,8 +183,10 @@ const Send = ({ onClose, words, setNotification, onSend }) => {
         }, 5000);
         close();
       })
-      .catch(() =>
-        setError('Unknown error sending the sequence to your friend.')
+      .catch(e =>
+        setError(
+          e.reason || 'Unknown error sending the sequence to your friend.'
+        )
       );
   };
 
@@ -404,23 +421,6 @@ const Send = ({ onClose, words, setNotification, onSend }) => {
   );
 };
 
-export const Word = {
-  AQUICO: {
-    value: 'AQUICO',
-    label: 'Aquico',
-    color: 'indigo-500',
-    hoverColor: 'indigo-900',
-    letter: '∀',
-  },
-  AMIGO: {
-    value: 'AMIGO',
-    label: 'Amigo',
-    color: 'green-500',
-    hoverColor: 'green-900',
-    letter: 'A',
-  },
-};
-
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
@@ -431,6 +431,9 @@ const Words = ({ words, onRemove }) => {
       <ol className="overflow-hidden">
         {words.map((word, idx) => {
           const wordEnum = Word[word.value];
+
+          const onRemoveHandler = () =>
+            onRemove ? onRemove(word.key) : () => ({});
           return (
             <li
               key={word.key}
@@ -448,7 +451,7 @@ const Words = ({ words, onRemove }) => {
                     />
                   ) : null}
                   <a
-                    onClick={onRemove(word.key)}
+                    onClick={onRemoveHandler}
                     className="relative flex items-start group"
                   >
                     <span className="h-9 flex items-center">
@@ -478,7 +481,7 @@ const Words = ({ words, onRemove }) => {
                     />
                   ) : null}
                   <a
-                    onClick={onRemove(word.key)}
+                    onClick={onRemoveHandler}
                     className="relative flex items-start group"
                     aria-current="step"
                   >
@@ -506,7 +509,7 @@ const Words = ({ words, onRemove }) => {
                     />
                   ) : null}
                   <a
-                    onClick={onRemove(word.key)}
+                    onClick={onRemoveHandler}
                     className="relative flex items-start group"
                   >
                     <span className="h-9 flex items-center" aria-hidden="true">
@@ -533,9 +536,26 @@ const Words = ({ words, onRemove }) => {
   );
 };
 export const Game = () => {
+  const { gameId } = useParams();
   const [notification, setNotification] = useState(null);
   const [words, setWords] = useState([]);
   const [showSend, setShowSend] = useState(false);
+  const [readyToAnswer, setReadyToAnswer] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const game = useTracker(() => {
+    if (!gameId) {
+      return;
+    }
+    const handle = Meteor.subscribe('gameById', { gameId });
+    let isReady = handle.ready();
+
+    if (isReady) {
+      setIsLoading(false);
+    }
+    return GamesCollection.findOne(gameId);
+  }, [gameId]);
+
   const onAdd = word => () => {
     setWords([
       ...words.map(word => ({
@@ -545,83 +565,167 @@ export const Game = () => {
       { key: Random.id(), value: word, status: 'current' },
     ]);
   };
+
   const onRemove = key => () => {
     setWords(words.filter(({ key: currentKey }) => key !== currentKey));
   };
+
   const onSend = () => {
     setWords([]);
   };
+
+  const sendMyAnswer = () => {
+    methodCall('checkAnswer', { gameId, words })
+      .then(result => {
+        setNotification(result);
+        setWords([]);
+      })
+      .catch(e => {
+        setNotification({
+          title: 'Error',
+          message: 'Unknown error sending your answer.',
+        });
+        console.error('Error sending answer', e);
+      });
+  };
+
+  if (gameId && isLoading) {
+    return (
+      <div className="bg-gray-50 pt-12 sm:pt-16 flex flex-col justify-center" style={{height: '100vh'}}>
+        <div className="flex justify-center">
+          <CubeIcon className="h-10 w-10 text-green-600" />
+        </div>
+        <div className="flex justify-center">
+        <p className="mt-3 text-xl text-gray-500 sm:mt-4">loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const pendingSequence =
+    game &&
+    game.sequences.find(({ status }) => status === SequenceStatus.PENDING);
+
+  const isPendingSequence = !!pendingSequence;
+  const newSequence = !game || !isPendingSequence;
+  const preparingToAnswer = game && isPendingSequence && !readyToAnswer;
+  const sendAnswer = game && isPendingSequence && readyToAnswer;
+
   return (
     <div className="bg-gray-50 pt-12 sm:pt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Create your sequence
-          </h2>
-          <p className="mt-3 text-xl text-gray-500 sm:mt-4">
-            You can choose as many words as you want but if that is your first
-            time we recommend starting with one.
-          </p>
-        </div>
-      </div>
-      <div className="mt-10 bg-white sm:pb-16">
-        <div className="relative">
-          <div className="absolute inset-0 h-1/2 bg-gray-50" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
-              <dl className="rounded-lg bg-white shadow-lg sm:grid sm:grid-cols-2">
-                <div
-                  onClick={onAdd(Word.AQUICO.value)}
-                  className="flex flex-col border-b border-gray-100 p-6 text-center sm:border-0 sm:border-r  cursor-pointer"
-                >
-                  <dt className="order-2 mt-2 text-lg leading-6 font-medium text-gray-500">
-                    {Word.AQUICO.letter}
-                  </dt>
-                  <dd
-                    className={`order-1 text-5xl font-extrabold text-${Word.AQUICO.color} hover:text-${Word.AQUICO.hoverColor}`}
-                  >
-                    {Word.AQUICO.label}
-                  </dd>
-                </div>
-                <div
-                  onClick={onAdd(Word.AMIGO.value)}
-                  className="flex flex-col border-t border-gray-100 p-6 text-center sm:border-0 sm:border-l  cursor-pointer"
-                >
-                  <dt className="order-2 mt-2 text-lg leading-6 font-medium text-gray-500">
-                    {Word.AMIGO.letter}
-                  </dt>
-                  <dd
-                    className={`order-1 text-5xl font-extrabold text-${Word.AMIGO.color} hover:text-${Word.AMIGO.hoverColor}`}
-                  >
-                    {Word.AMIGO.label}
-                  </dd>
-                </div>
-              </dl>
-            </div>
+      {newSequence && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Create your sequence
+            </h2>
+            <p className="mt-3 text-xl text-gray-500 sm:mt-4">
+              You can choose as many words as you want but if that is your first
+              time we recommend starting with one.
+            </p>
           </div>
         </div>
-      </div>
-      <div className="mt-10 pb-10 flex  justify-center">
-        {!words.length && (
-          <p className="mt-3 text-xl text-gray-500 sm:mt-4">
-            Select the first word above.
-          </p>
-        )}
-        <Words words={words} onRemove={onRemove} />
-      </div>
-      <div className="pb-10 flex  justify-center">
-        <button
-          onClick={() => setShowSend(true)}
-          type="button"
-          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          disabled={!words.length}
-        >
-          Send Sequence
-          <MailIcon className="ml-3 -mr-1 h-5 w-5" aria-hidden="true" />
-        </button>
-      </div>
+      )}
+      {(newSequence || sendAnswer) && (
+        <Fragment>
+          <div className="mt-10 bg-white sm:pb-16">
+            <div className="relative">
+              <div className="absolute inset-0 h-1/2 bg-gray-50" />
+              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-4xl mx-auto">
+                  <dl className="rounded-lg bg-white shadow-lg sm:grid sm:grid-cols-2">
+                    <div
+                      onClick={onAdd(Word.AQUICO.value)}
+                      className="flex flex-col border-b border-gray-100 p-6 text-center sm:border-0 sm:border-r  cursor-pointer"
+                    >
+                      <dt className="order-2 mt-2 text-lg leading-6 font-medium text-gray-500">
+                        {Word.AQUICO.letter}
+                      </dt>
+                      <dd
+                        className={`order-1 text-5xl font-extrabold text-${Word.AQUICO.color} hover:text-${Word.AQUICO.hoverColor}`}
+                      >
+                        {Word.AQUICO.label}
+                      </dd>
+                    </div>
+                    <div
+                      onClick={onAdd(Word.AMIGO.value)}
+                      className="flex flex-col border-t border-gray-100 p-6 text-center sm:border-0 sm:border-l  cursor-pointer"
+                    >
+                      <dt className="order-2 mt-2 text-lg leading-6 font-medium text-gray-500">
+                        {Word.AMIGO.letter}
+                      </dt>
+                      <dd
+                        className={`order-1 text-5xl font-extrabold text-${Word.AMIGO.color} hover:text-${Word.AMIGO.hoverColor}`}
+                      >
+                        {Word.AMIGO.label}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-10 pb-10 flex  justify-center">
+            {!words.length && (
+              <p className="mt-3 text-xl text-gray-500 sm:mt-4">
+                Select the first word above.
+              </p>
+            )}
+            <Words words={words} onRemove={onRemove} />
+          </div>
+        </Fragment>
+      )}
+      {newSequence && (
+        <div className="pb-10 flex  justify-center">
+          <button
+            onClick={() => setShowSend(true)}
+            type="button"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            disabled={!words.length}
+          >
+            Send Sequence
+            <MailIcon className="ml-3 -mr-1 h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+      {preparingToAnswer && (
+        <Fragment>
+          <div className="mt-10 pb-10 flex flex-col justify-center">
+            <p className="mt-3 text-xl text-gray-500 sm:mt-4 text-center">
+              Memorize the sequence below.
+            </p>
+            <div className="mt-10 pb-10 flex justify-center">
+              <Words words={pendingSequence.words} />
+            </div>
+          </div>
+          <div className="pb-10 flex  justify-center">
+            <button
+              onClick={() => setReadyToAnswer(true)}
+              type="button"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              I'm Ready to Answer
+              <CheckIcon className="ml-3 -mr-1 h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        </Fragment>
+      )}
+      {sendAnswer && (
+        <div className="pb-10 flex  justify-center">
+          <button
+            onClick={sendMyAnswer}
+            type="button"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            disabled={!words.length}
+          >
+            Send My Answer
+            <MailIcon className="ml-3 -mr-1 h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
       {showSend && (
         <Send
+          game={game}
           onClose={() => setShowSend(false)}
           setNotification={setNotification}
           onSend={onSend}

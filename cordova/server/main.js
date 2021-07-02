@@ -1,5 +1,5 @@
-import '../imports/infra/meta-tags';
-import '../imports/infra/rest';
-import '../imports/infra/addPlayerId';
-import '../imports/infra/database-seed';
+import '../imports/methods/addPlayerId';
 import '../imports/methods/sendSequence';
+import '../imports/methods/checkAnswer';
+
+import '../imports/publications/gameById';
